@@ -108,16 +108,19 @@ L’applicazione è realizzata in **HTML**, **CSS** e **JavaScript puro**, con s
 
 ---
 
-### 💻 Codice sorgente & Demo
+### 🚀 Demo
 
-Se pubblichi il progetto, aggiorna qui i link:
+👉 **Live Preview:** [https://cgiuseppe8786.github.io/RPG_CreatureSearch/](https://cgiuseppe8786.github.io/RPG_CreatureSearch/)
 
-- 📂 **Repository:** `https://github.com/<tuo-utente>/rpg-creature-search`
-- ▶️ **Live Preview:** `https://<tuo-utente>.github.io/rpg-creature-search/`
+---
+
+### 💻 Codice sorgente
+
+📂 **Repository:** [https://github.com/cgiuseppe8786/RPG_CreatureSearch](https://github.com/cgiuseppe8786/RPG_CreatureSearch)
 
 ---
 
 ### 🧾 Licenza
 
 Rilasciato sotto **licenza MIT**.  
-Utilizzabile liberamente per scopi educativi e portfolio.
+Può essere utilizzato liberamente per scopi educativi e di portfolio.
