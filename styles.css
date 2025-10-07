@@ -1,0 +1,306 @@
+/* ==========================================================================
+   Variabili di tema e layer base
+   - Uso CSS custom properties per supportare dark/light con override mirato.
+   - Le ombre e i border sono morbidi per un aspetto "glass" coerente.
+   ========================================================================== */
+
+/* Light theme (default) */
+:root {
+  --bg: #f6f7fb;
+  --card: rgba(0, 0, 0, 0.035);
+  --card-border: rgba(0, 0, 0, 0.12);
+  --text: #101420;
+  --muted: #5b6275;
+  --accent: #7c5cff;
+  --accent-2: #25d0a6;
+  --pill: rgba(124, 92, 255, 0.12);
+  --shadow: 0 24px 48px rgba(16, 20, 32, 0.12);
+  --focus: var(--accent-2);
+}
+
+/* Dark theme: override mirato delle variabili */
+body[data-theme="dark"] {
+  --bg: #0b0f1a;
+  --card: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(255, 255, 255, 0.15);
+  --text: #e6e8ee;
+  --muted: #a6abc4;
+  --accent: #7c5cff;
+  --accent-2: #25d0a6;
+  --pill: rgba(124, 92, 255, 0.12);
+  --shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  --focus: var(--accent-2);
+}
+
+/* Reset box model e altezza piena per body/html per gestire sfondo fisso */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+/* Tipografia e transizioni tema */
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  overflow-x: hidden;
+  transition: background .2s ease, color .2s ease;
+}
+
+/* ---------------- Decorazioni background non interattive ---------------- */
+.bg { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
+
+/* Gradiente radiale multiplo: profondità + blur per diffusion glow */
+.bg-gradient {
+  position: absolute; inset: -20%;
+  background:
+    radial-gradient(50% 50% at 20% 20%, rgba(124, 92, 255, 0.25), transparent 60%),
+    radial-gradient(50% 50% at 80% 30%, rgba(37, 208, 166, 0.25), transparent 60%),
+    radial-gradient(50% 50% at 50% 80%, rgba(255, 187, 0, 0.18), transparent 60%);
+  filter: blur(60px);
+}
+
+/* In light riduco l'intensità per migliorare il contrasto contenuti */
+body:not([data-theme="dark"]) .bg-gradient { opacity: .66; }
+
+/* Griglia sottile con maschera radiale per leggera texture */
+.bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle at 50% 0%, black, transparent 70%);
+  opacity: 0.16; z-index: -1;
+}
+
+body[data-theme="dark"] .bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  opacity: .25;
+}
+
+/* ---------------- Layout contenuto ---------------- */
+.container { max-width: 1100px; margin: 60px auto; padding: 0 22px; }
+
+/* Header responsive a griglia: brand sopra, search sotto (mobile-first) */
+.app-header {
+  display: grid;
+  gap: 15px;
+  grid-template-columns: 1fr;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+/* Branding: icona + titolo; l'icona usa currentColor per heredity colore */
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon { width: 28px; height: 28px; color: var(--accent-2); filter: drop-shadow(0 6px 12px rgba(37, 208, 166, 0.35)); }
+.app-header h1 { font-size: 1.4rem; letter-spacing: 0.2px; margin: 0; font-weight: 800; }
+
+/* Barra ricerca con input flessibile e bottone prominente */
+.search-bar { display: flex; gap: 10px; align-items: center; }
+#search-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  padding: 14px 14px;
+  border-radius: 14px;
+  outline: none;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, box-shadow 0.2s, background .2s;
+}
+#search-input::placeholder { opacity: 0.75; color: var(--muted); }
+#search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(124, 92, 255, 0.25); }
+body[data-theme="dark"] #search-input { background: rgba(255, 255, 255, 0.08); }
+
+/* CTA primaria con gradiente: feedback attivo + ombra morbida */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #5c3cf2);
+  border: 0; color: white; font-weight: 700;
+  padding: 14px 18px; border-radius: 12px; cursor: pointer;
+  transition: transform 0.06s ease, box-shadow 0.2s ease, filter .2s ease;
+  box-shadow: 0 10px 20px rgba(124, 92, 255, 0.35);
+}
+.btn-primary:active { transform: translateY(1px); }
+body:not([data-theme="dark"]) .btn-primary { filter: saturate(.95) brightness(.98); }
+
+/* ---------------- Theme toggle ----------------
+   Posizionato assolutamente in alto a destra; gestito via JS (click/keyboard). */
+.theme-icon{
+  position: absolute; top: 14px; right: 16px;
+  width: 40px; height: 40px; font-size: 1.5rem;
+  color: var(--text); cursor: pointer; user-select: none;
+}
+
+/* ---------------- Card e sezioni contenuto ---------------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+/* Scheda creatura: spaziatura fluida via clamp per resa ottimale in vari viewport */
+.creature-card { padding: clamp(18px, 2.6vw, 28px); }
+.creature-main { display: grid; gap: 28px; }
+.creature-head { display: grid; gap: 16px; grid-template-columns: 1fr; }
+.creature-name { margin: 0; font-size: 2rem; letter-spacing: 0.5px; }
+.muted { color: var(--muted); margin: 2px 0 0 0; }
+.muted.small { font-size: 0.9rem; }
+
+/* Badge tipi con alto contrasto e bordo leggero */
+.types { display: flex; gap: 10px; flex-wrap: wrap; align-self: start; }
+.type-pill {
+  font-size: 0.78rem; font-weight: 800; letter-spacing: 0.4px;
+  padding: 7px 12px; border-radius: 999px; background: var(--pill);
+  color: #3b2ca8; border: 1px solid rgba(124, 92, 255, 0.35);
+}
+body[data-theme="dark"] .type-pill { color: #eae4ff; }
+
+/* Info base (peso/altezza) in pill per coerenza visiva */
+.info-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.pill {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: 700; letter-spacing: 0.3px;
+}
+body[data-theme="dark"] .pill { background: rgba(255, 255, 255, 0.06); }
+
+/* Titoli sezione secondari con uppercase e tracking ampio */
+.section-title {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  color: var(--muted);
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+/* Griglia stats responsive: 2 colonne su mobile, 3 su desktop */
+.stats-section { display: grid; gap: 16px; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.stat {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+body[data-theme="dark"] .stat { background: rgba(255, 255, 255, 0.06); }
+.stat .label { color: var(--muted); font-weight: 700; letter-spacing: 0.3px; }
+.stat .value { font-weight: 900; letter-spacing: 0.4px; }
+
+/* Sezione abilità speciale con lieve gradiente per enfasi */
+.special-section { display: grid; gap: 16px; }
+.special-card {
+  background: linear-gradient(180deg, rgba(124, 92, 255, 0.14), rgba(124, 92, 255, 0.06));
+  border: 1px solid rgba(124, 92, 255, 0.28);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.special-name { font-weight: 900; letter-spacing: 0.4px; margin-bottom: 6px; }
+.special-description { color: var(--text); margin: 0; opacity: 0.95; }
+
+/* Suggerimenti (non usati qui ma mantenuti per eventuali helper) */
+.tips {
+  margin-top: 22px;
+  color: var(--muted);
+  border-top: 1px dashed var(--card-border);
+  padding-top: 12px;
+}
+
+/* Code inline con leggera evidenziazione */
+code {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-border);
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+body[data-theme="dark"] code { background: rgba(255, 255, 255, 0.07); }
+
+/* ---------------- Catalogo collassabile ----------------
+   - Bottone-accordion con chevron ruotato in base a [aria-expanded].
+   - Pannello con fade in per feedback visivo.
+*/
+.catalog-card { margin-top: 18px; padding: 0; }
+.collapsible {
+  width: 100%; background: transparent; border: none; color: var(--text);
+  padding: 16px 20px; font-weight: 800; letter-spacing: 0.6px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  border-bottom: 1px dashed var(--card-border);
+}
+.collapsible .chevron {
+  width: 10px; height: 10px;
+  border-right: 2px solid var(--text); border-bottom: 2px solid var(--text);
+  transform: rotate(-45deg);
+  transition: transform 0.2s ease;
+}
+.collapsible[aria-expanded="true"] .chevron { transform: rotate(45deg); }
+
+.collapse-panel {
+  padding: 16px 18px 20px 18px;
+  animation: fadeIn 180ms ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toolbar catalogo con filtro client-side e contatore elementi */
+.catalog-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+#catalog-filter {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  outline: none;
+}
+body[data-theme="dark"] #catalog-filter { background: rgba(255, 255, 255, 0.08); }
+#catalog-filter::placeholder { color: var(--muted); opacity: 0.75; }
+
+/* Griglia di card compatte; il role="list" è sul container in HTML */
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.catalog-item {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: border-color 0.15s ease, transform 0.06s ease, background .2s ease;
+  cursor: pointer;
+}
+body[data-theme="dark"] .catalog-item { background: rgba(255, 255, 255, 0.06); }
+.catalog-item:hover { border-color: var(--accent); }
+.catalog-item:active { transform: translateY(1px); }
+.catalog-item .name { font-weight: 800; }
+.catalog-item .id { color: var(--muted); font-weight: 700; }
+
+/* ---------------- Media queries ----------------
+   - A 820px passo a layout più denso:
+     header su 2 colonne, stats in 3 colonne, catalogo su 3 colonne.
+*/
+@media (min-width: 820px) {
+  .app-header { grid-template-columns: auto 1fr; align-items: center; }
+  .creature-head { grid-template-columns: 1fr auto; align-items: end; }
+  .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .catalog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+}

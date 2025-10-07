@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    Documento principale dell'app "RPG Creature Search".
+    - Preconnect verso Google Fonts per ridurre la latenza al primo paint.
+    - Meta viewport per layout responsive su dispositivi mobili.
+    - Foglio di stile unico "styles.css" per mantenere separazione presentazione/struttura.
+  -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RPG Creature Search</title>
+
+  <!-- Ottimizzazione caricamento font: preconnect minimizza la latenza TLS/DNS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Famiglia Inter: pesi 400/600/800 per tipografia gerarchica -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <!-- Foglio di stile dell'app -->
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<!--
+  Imposto "dark" di default su <body> per evitare FOUC (flash of unthemed content).
+  Lo script riallinea poi al tema persistito o alle preferenze OS.
+-->
+<body data-theme="dark">
+  <!--
+    Strati decorativi in background:
+    - bg-gradient: macchie radiali morbide (blur) per profondità.
+    - bg-grid: griglia sottile con mask radiale per effetto "hero".
+    Sono fuori dal flusso e non ricevono eventi (pointer-events:none).
+  -->
+  <div class="bg">
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- Contenitore centrale: limita la larghezza e gestisce i margini -->
+  <main class="container">
+    <!--
+      Header applicativo:
+      - "brand" con logo SVG accessibile (decorativo, aria-hidden).
+      - "search-bar" con input ricercabile e bottone azione; gli elementi hanno etichette ARIA.
+    -->
+    <header class="app-header">
+      <div class="brand">
+        <h1>RPG Creature Search</h1>
+      </div>
+
+      <!--
+        Barra di ricerca:
+        - required per prevenire submit vuoti.
+        - aria-label per tecnologie assistive.
+        - Il bottone ha label e testo coerenti.
+      -->
+      <div class="search-bar">
+        <input
+          id="search-input"
+          type="text"
+          required
+          placeholder="Search by name or ID"
+          aria-label="Search by creature name or ID"
+        />
+        <button id="search-button" class="btn-primary" aria-label="Search">Search</button>
+      </div>
+    </header>
+
+    <!--
+      Interruttore tema:
+      - role="button" + tabindex=0 per rendere l'elemento focusabile.
+      - Gestione da tastiera: Enter/Space (vedi script).
+    -->
+    <span id="theme-toggle" class="theme-icon" role="button" tabindex="0" aria-label="Cambia tema" title="Cambia tema">🌙</span>
+
+    <!--
+      Scheda creatura (dettaglio):
+      - aria-live="polite" per annunciare aggiornamenti senza interrompere lo screen reader.
+      - La sezione "Special Ability" è nascosta se non presente.
+    -->
+    <section class="card creature-card" aria-live="polite">
+      <div class="creature-main">
+        <div class="creature-head">
+          <div>
+            <h2 id="creature-name" class="creature-name">—</h2>
+            <p id="creature-id" class="muted">—</p>
+          </div>
+          <!-- Badge tipi; container con aria-label per contesto semantico -->
+          <div id="types" class="types" aria-label="Types"></div>
+        </div>
+
+        <!-- Pill informativi base -->
+        <div class="info-row">
+          <span id="weight" class="pill">Weight: —</span>
+          <span id="height" class="pill">Height: —</span>
+        </div>
+
+        <!-- Griglia statistiche base; nomi coerenti con dataset API -->
+        <div class="stats-section">
+          <h3 class="section-title">Base Stats</h3>
+          <div class="stats-grid">
+            <div class="stat">
+              <span class="label">HP</span><span id="hp" class="value">—</span>
+            </div>
+            <div class="stat">
+              <span class="label">Attack</span><span id="attack" class="value">—</span>
+            </div>
+            <div class="stat">
+              <span class="label">Defense</span><span id="defense" class="value">—</span>
+            </div>
+            <div class="stat">
+              <span class="label">Sp. Atk</span><span id="special-attack" class="value">—</span>
+            </div>
+            <div class="stat">
+              <span class="label">Sp. Def</span><span id="special-defense" class="value">—</span>
+            </div>
+            <div class="stat">
+              <span class="label">Speed</span><span id="speed" class="value">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sezione abilità speciale: resa condizionale via JS -->
+        <div class="special-section" id="special-section" hidden>
+          <h3 class="section-title">Special Ability</h3>
+          <div class="special-card">
+            <div class="special-name" id="special-name">—</div>
+            <p class="special-description" id="special-description">—</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--
+      Catalogo completo (collassabile):
+      - bottone con aria-expanded e aria-controls per stato e associazione al pannello.
+      - pannello nascosto di default; caricamento lazy on-demand per performance.
+    -->
+    <section class="card catalog-card">
+      <button id="toggle-catalog" class="collapsible" aria-expanded="false" aria-controls="catalog-panel">
+        <span class="chevron" aria-hidden="true"></span>
+        <span>All Creatures</span>
+        <span class="muted small" id="catalog-count-label"></span>
+      </button>
+
+      <div id="catalog-panel" class="collapse-panel" hidden>
+        <!-- Toolbar con filtro client-side e contatore -->
+        <div class="catalog-toolbar">
+          <input
+            id="catalog-filter"
+            type="text"
+            placeholder="Filter by name or ID..."
+            aria-label="Filter creatures"
+          />
+          <span id="catalog-count" class="muted"></span>
+        </div>
+
+        <!-- Lista semantica resa come griglia responsive; ogni item ha role="listitem" -->
+        <div id="catalog-grid" class="catalog-grid" role="list"></div>
+      </div>
+    </section>
+    <!-- /Catalogo completo -->
+  </main>
+
+  <!--
+    Script principale:
+    - Nessuna dipendenza esterna: puro JS per compatibilità e semplicità.
+    - Inserito in fondo per non bloccare il parsing del DOM.
+  -->
+  <script src="./script.js"></script>
+</body>
+</html>
